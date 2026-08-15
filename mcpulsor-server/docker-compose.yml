@@ -1,0 +1,29 @@
+name: mcpulsor-server-and-inspector
+
+services:
+  server-http:
+    build:
+      context: ..
+      dockerfile: mcpulsor-server/Dockerfile
+      target: http
+      args:
+        MODULE_DIR: mcpulsor-server
+        #MAIN_CLASS: edu.borisov.mcpulsor.server.McpulsorServerApplication
+    image: mcpulsor-server:http
+    container_name: mcpulsor-server-http
+    expose:
+      - "8091"
+    ports:
+      - "8091:8091"
+
+  inspector-http:
+    image: ghcr.io/modelcontextprotocol/inspector:latest
+    container_name: mcp-inspector-http
+    depends_on:
+      - server-http
+    environment:
+      HOST: "0.0.0.0"
+      ALLOWED_ORIGINS: "http://localhost:6274"
+    ports:
+      - "6274:6274"                # Inspector UI (http)
+      - "6277:6277"                # Inspector proxy (http)
