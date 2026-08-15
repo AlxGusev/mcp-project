@@ -6,13 +6,14 @@ ARG MODULE_DIR=mcpulsor-server
 WORKDIR /src
 COPY . /src
 
-# Build Spring Boot jar (boot-maven-plugin repackage). Copy the non-original jar to /app/app.jar
+# Build fat jar via maven-shade-plugin. Copy the shaded (-fat) jar to /app/app.jar
 RUN --mount=type=cache,target=/root/.m2 \
     set -eux; \
     mvn -DskipTests -f "${MODULE_DIR}/pom.xml" package; \
     mkdir -p /app; \
     ls -la "${MODULE_DIR}/target"; \
-    JAR="$(ls -1 ${MODULE_DIR}/target/*.jar | grep -v 'original-' | head -n 1)"; \
+    JAR="$(ls -1 ${MODULE_DIR}/target/*-fat.jar | head -n 1)"; \
+    test -f "$JAR"; \
     echo "Using jar: $JAR"; \
     cp "$JAR" /app/app.jar
 
