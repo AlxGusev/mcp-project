@@ -4,18 +4,17 @@ import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
-import io.modelcontextprotocol.spec.McpSchema;
 import lombok.SneakyThrows;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Server;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 
-import static io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
-import static io.modelcontextprotocol.spec.McpSchema.Tool;
+import static io.modelcontextprotocol.spec.McpSchema.*;
 
 public class McpulsorServerApplication {
 
@@ -30,13 +29,17 @@ public class McpulsorServerApplication {
 
         McpServerFeatures.SyncToolSpecification heartRateToolSpec = McpServerFeatures.SyncToolSpecification.builder()
                 .tool(heartRateMonitorTool)
-                .callHandler(
-                        (mcpSyncServerExchange, callToolRequest) ->
-                                new McpSchema.CallToolResult(
-                                        List.of(McpSchema.TextContent.builder("user's heart rate is 50").build()),
-                                        false, null, null))
+                .callHandler((mcpSyncServerExchange, callToolRequest) -> {
+                    String days = callToolRequest.arguments().get("days").toString();
+                    return new CallToolResult(
+                            List.of(TextContent
+                                    .builder("user's heart rate for the last " + days + " days is 62bpm")
+                                    .build()),
+                            false,
+                            null,
+                            null);
+                })
                 .build();
-
 
         McpServer.sync(transportProvider)
                 .serverInfo("mcpulsor mcp server", "1.0.RELEASE")
@@ -55,7 +58,13 @@ public class McpulsorServerApplication {
     }
 
     private static String createHeartRateMonitorSchema() {
-        return new ObjectMapper().createObjectNode().put("type", "object").toString();
+        ObjectNode root = new ObjectMapper().createObjectNode().put("type", "object");
+        root.putObject("properties")
+                .putObject("days")
+                .put("type", "integer")
+                .put("description", "The number of past days to include in the heart rate monitoring request");
+        root.putArray("required").add("days");
+        return root.toString();
     }
 
     private static ServerCapabilities createServerCapabilities() {

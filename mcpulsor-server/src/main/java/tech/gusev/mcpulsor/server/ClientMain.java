@@ -3,7 +3,10 @@ package tech.gusev.mcpulsor.server;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientStreamableHttpTransport;
-import io.modelcontextprotocol.spec.McpSchema;
+
+import java.util.Map;
+
+import static io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 
 public class ClientMain {
 
@@ -17,8 +20,10 @@ public class ClientMain {
         try (McpSyncClient client = McpClient.sync(clientTransport).build()) {
             client.initialize();
             client.listTools().tools().forEach(System.out::println);
-            client.callTool(McpSchema.CallToolRequest
-                            .builder("heartRateMonitor").build())
+            client.callTool(CallToolRequest
+                            .builder("heartRateMonitor")
+                            .arguments(Map.of("days", 777))
+                            .build())
                     .content()
                     .forEach(System.out::println);
         }
