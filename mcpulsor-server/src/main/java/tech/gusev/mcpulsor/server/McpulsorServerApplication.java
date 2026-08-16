@@ -12,7 +12,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.modelcontextprotocol.spec.McpSchema.*;
 
@@ -22,22 +23,18 @@ public class McpulsorServerApplication {
     public static void main(String[] args) {
         var transportProvider = HttpServletStreamableServerTransportProvider.builder().mcpEndpoint("/mcpulsor").build();
 
-        Tool heartRateMonitorTool = Tool.builder("heartRateMonitor", new JacksonMcpJsonMapper(new JsonMapper()), createHeartRateMonitorSchema())
+        Tool heartRateMonitorTool = Tool
+                .builder("heartRateMonitor", new JacksonMcpJsonMapper(new JsonMapper()), createHeartRateMonitorInputSchema())
                 .title("Human Heart Rate Monitor")
                 .description("Returns the heart rate of the user as a simple string value")
+                .outputSchema(new JacksonMcpJsonMapper(new JsonMapper()), createHeartRateMonitorOutputSchema())
                 .build();
 
         McpServerFeatures.SyncToolSpecification heartRateToolSpec = McpServerFeatures.SyncToolSpecification.builder()
                 .tool(heartRateMonitorTool)
                 .callHandler((mcpSyncServerExchange, callToolRequest) -> {
-                    String days = callToolRequest.arguments().get("days").toString();
-                    return new CallToolResult(
-                            List.of(TextContent
-                                    .builder("user's heart rate for the last " + days + " days is 62bpm")
-                                    .build()),
-                            false,
-                            null,
-                            null);
+                    int days = (int) callToolRequest.arguments().get("days");
+                    return getCallToolResult(days);
                 })
                 .build();
 
@@ -57,13 +54,36 @@ public class McpulsorServerApplication {
         server.join();
     }
 
-    private static String createHeartRateMonitorSchema() {
+    private static CallToolResult getCallToolResult(int days) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("heart_rate", "Your heart rate is 62bpm / " + days + " days");
+        properties.put("state", "You are in trouble");
+        properties.put("sleepDeprivation", true);
+        return CallToolResult.builder().structuredContent(properties).build();
+    }
+
+    private static String createHeartRateMonitorInputSchema() {
         ObjectNode root = new ObjectMapper().createObjectNode().put("type", "object");
         root.putObject("properties")
                 .putObject("days")
                 .put("type", "integer")
                 .put("description", "The number of past days to include in the heart rate monitoring request");
         root.putArray("required").add("days");
+        return root.toString();
+    }
+
+    private static String createHeartRateMonitorOutputSchema() {
+        ObjectNode root = new ObjectMapper().createObjectNode().put("type", "object");
+        ObjectNode properties = root.putObject("properties");
+        properties.putObject("heart_rate")
+                .put("type", "string")
+                .put("description", "Average heart rate of the user");
+        properties.putObject("state")
+                .put("type", "string")
+                .put("description", "What state of the heart rate of the user");
+        properties.putObject("sleepDeprivation")
+                .put("type", "boolean")
+                .put("description", "Whether the user is sleep deprived YES/NO");
         return root.toString();
     }
 
