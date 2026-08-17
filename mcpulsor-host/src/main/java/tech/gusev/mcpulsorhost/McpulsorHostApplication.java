@@ -23,11 +23,12 @@ public class McpulsorHostApplication {
     }
 
     public static void main(String[] args) {
-        String firstQuestion = "What is my heart rate for the last 7 days?";
-        String secondQuestion = "How are you?";
-        String thirdQuestion = "What will my heart rate for the next 7 days be plus 100?";
+        String firstQuestion = "What is my heart rate today? Will I survive?";
+        String secondQuestion = "How am I feeling?";
+        String thirdQuestion = "Given my heart rate, should I go for a 100-km bike ride?";
         Host host = SpringApplication.run(McpulsorHostApplication.class, args).getBean(Host.class);
         host.printAnswerToUser(firstQuestion);
+        host.printAnswerToUser("How are you?");
         host.printAnswerToUser(secondQuestion);
         host.printAnswerToUser(thirdQuestion);
     }

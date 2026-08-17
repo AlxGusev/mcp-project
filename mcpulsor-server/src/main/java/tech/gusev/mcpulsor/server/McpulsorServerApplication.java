@@ -4,6 +4,7 @@ import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
+import io.modelcontextprotocol.spec.McpSchema;
 import lombok.SneakyThrows;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
@@ -33,6 +34,9 @@ public class McpulsorServerApplication {
         McpServerFeatures.SyncToolSpecification heartRateToolSpec = McpServerFeatures.SyncToolSpecification.builder()
                 .tool(heartRateMonitorTool)
                 .callHandler((mcpSyncServerExchange, callToolRequest) -> {
+                    String serverMessage = "Received call tool request: " + callToolRequest.toString();
+                    System.out.println("Server says: " + serverMessage);
+                    mcpSyncServerExchange.loggingNotification(McpSchema.LoggingMessageNotification.builder(LoggingLevel.INFO, serverMessage).build());
                     int days = (int) callToolRequest.arguments().get("days");
                     return getCallToolResult(days);
                 })
@@ -59,7 +63,9 @@ public class McpulsorServerApplication {
         properties.put("heart_rate", "Your heart rate is 62bpm / " + days + " days");
         properties.put("state", "You are in trouble");
         properties.put("sleepDeprivation", true);
-        return CallToolResult.builder().structuredContent(properties).build();
+        CallToolResult toolResult = CallToolResult.builder().structuredContent(properties).build();
+        System.out.println("Server says: here is what i will return to the user: " + toolResult.toString());
+        return toolResult;
     }
 
     private static String createHeartRateMonitorInputSchema() {
