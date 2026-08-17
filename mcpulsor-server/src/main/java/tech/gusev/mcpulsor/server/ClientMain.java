@@ -21,8 +21,8 @@ public class ClientMain {
             client.initialize();
             client.listTools().tools().forEach(System.out::println);
             client.callTool(CallToolRequest
-                            .builder("heartRateMonitor")
-                            .arguments(Map.of("days", 777))
+                            .builder("Diagnoser")
+                            .arguments(Map.of("name", "Tom"))
                             .build())
                     .content()
                     .forEach(System.out::println);
