@@ -12,8 +12,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn -DskipTests -f "${MODULE_DIR}/pom.xml" package; \
     mkdir -p /app; \
     ls -la "${MODULE_DIR}/target"; \
-    JAR="$(ls -1 ${MODULE_DIR}/target/*-fat.jar | head -n 1)"; \
-    test -f "$JAR"; \
+    JAR="$(ls -1 ${MODULE_DIR}/target/*.jar | grep -v 'original-' | head -n 1)"; \
     echo "Using jar: $JAR"; \
     cp "$JAR" /app/app.jar
 
