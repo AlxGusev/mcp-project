@@ -13,7 +13,8 @@ public class McpulsorHostApplication {
 
     @Bean
     public ChatClient chatClient(ChatModel chatModel, ToolCallbackProvider toolCallbackProvider) {
-        return ChatClient.builder(chatModel).defaultTools(toolCallbackProvider)
+        return ChatClient.builder(chatModel)
+                .defaultTools(toolCallbackProvider)
                 .defaultOptions(OllamaChatOptions.builder()
                         .temperature(0.1)
                         .topK(10)
